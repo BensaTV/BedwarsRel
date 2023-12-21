@@ -536,7 +536,7 @@ public class PlayerListener extends BaseListener {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private void onIngameInventoryClick(InventoryClickEvent ice, Player player, Game game) {
-    if (!ice.getInventory().getName().equals(BedwarsRel._l(player, "ingame.shop.name"))) {
+    if (!ice.getView().getTitle().equals(BedwarsRel._l(player, "ingame.shop.name"))) {
       if (game.isSpectator(player)
           || (game.getCycle() instanceof BungeeGameCycle && game.getCycle().isEndGameRunning()
           && BedwarsRel.getInstance().getBooleanConfig("bungeecord.endgame-in-lobby", true))) {
@@ -546,7 +546,7 @@ public class PlayerListener extends BaseListener {
           return;
         }
 
-        if (ice.getInventory().getName().equals(BedwarsRel._l(player, "ingame.spectator"))) {
+        if (ice.getView().getTitle().equals(BedwarsRel._l(player, "ingame.spectator"))) {
           ice.setCancelled(true);
           // TODO Check if skull item works
           if (!clickedStack.getType().equals(XMaterial.SKELETON_SKULL.parseMaterial())) {
@@ -1109,7 +1109,7 @@ public class PlayerListener extends BaseListener {
     }
 
     if (game.isSpectator(player)) {
-      if (ioe.getInventory().getName().equals(BedwarsRel._l(player, "ingame.spectator"))) {
+      if (ioe.getView().getTitle().equals(BedwarsRel._l(player, "ingame.spectator"))) {
         return;
       }
 
