@@ -1,0 +1,60 @@
+package io.github.bedwarsrel.com.v1_20_R3;
+
+import java.lang.reflect.Field;
+import org.bukkit.DyeColor;
+import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class TNTSheepRegister implements ITNTSheepRegister {
+
+  public void registerEntities(int entityId) {
+    CustomEntityRegistry.addCustomEntity(entityId, "TNTSheep", TNTSheep.class);
+  }
+
+  @Override
+  public ITNTSheep spawnCreature(
+      final io.github.bedwarsrel.com.v1_13_r3.shop.Specials.TNTSheep specialItem,
+      final Location location, final Player owner, Player target, final DyeColor color) {
+    final TNTSheep sheep = new TNTSheep(location, target);
+
+    ((CraftWorld) location.getWorld()).getHandle().addEntity(sheep, SpawnReason.CUSTOM);
+    sheep.setPosition(location.getX(), location.getY(), location.getZ());
+    ((CraftSheep) sheep.getBukkitEntity()).setColor(color);
+    new BukkitRunnable() {
+
+      @Override
+      public void run() {
+
+        TNTPrimed primedTnt = (TNTPrimed) location.getWorld()
+            .spawnEntity(location.add(0.0, 1.0, 0.0), EntityType.PRIMED_TNT);
+        ((CraftSheep) sheep.getBukkitEntity()).setPassenger(primedTnt);
+        sheep.setTNT(primedTnt);
+        try {
+          Field sourceField = EntityTNTPrimed.class.getDeclaredField("source");
+          sourceField.setAccessible(true);
+          sourceField.set(((CraftTNTPrimed) primedTnt).getHandle(),
+              ((CraftLivingEntity) owner).getHandle());
+        } catch (Exception ex) {
+          BedwarsRel.getInstance().getBugsnag().notify(ex);
+          ex.printStackTrace();
+        }
+        sheep.getTNT().setYield((float) (sheep.getTNT().getYield()
+            * BedwarsRel
+            .getInstance().getConfig().getDouble("specials.tntsheep.explosion-factor", 1.0)));
+        sheep.getTNT().setFuseTicks((int) Math.round(
+            BedwarsRel.getInstance().getConfig().getDouble("specials.tntsheep.fuse-time", 8) * 20));
+        sheep.getTNT().setIsIncendiary(false);
+        specialItem.getGame().getRegion().addRemovingEntity(sheep.getTNT());
+        specialItem.getGame().getRegion().addRemovingEntity(sheep.getBukkitEntity());
+        specialItem.updateTNT();
+      }
+    }.runTaskLater(BedwarsRel.getInstance(), 5L);
+
+    return sheep;
+  }
+
+}
